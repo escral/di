@@ -2,6 +2,7 @@ export type Factory<T, TRegistrations extends RegistrationsMap = RegistrationsMa
 export type Registration<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = { factory: Factory<T, TRegistrations>, instance?: T }
 export type RegistrationKey<TRegistrations extends RegistrationsMap> = Extract<keyof TRegistrations, string>
 export type RegistrationsMap = object
+export type ExtractRegistrations<T> = T extends Container<infer R> ? R : never
 
 /**
  * Dependency Injection Container
