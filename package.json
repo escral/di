@@ -1,0 +1,38 @@
+{
+    "name": "@escral/di",
+    "version": "0.0.0",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js",
+        "./package.json": "./package.json"
+    },
+    "author": "Alexander Topalo <topaloalexander@gmail.com>",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "release": "pnpm build && pnpm new-version -s && npm publish --access public",
+        "build": "tsdown",
+        "dev": "tsdown --watch",
+        "test": "vitest",
+        "test:types": "vitest --typecheck.only",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@escral/lint": "^2.0",
+        "@escral/tsconfig": "^0.2.1",
+        "@escral/versioning": "^1.5",
+        "@types/node": "^22.10",
+        "tsdown": "^0.15.9",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.1"
+    },
+    "engines": {
+        "node": ">=18.0"
+    },
+    "packageManager": "pnpm@10.19.0"
+}
