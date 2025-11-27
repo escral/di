@@ -7,7 +7,7 @@ export type ExtractRegistrations<T> = T extends Container<infer R> ? R : never
 /**
  * Dependency Injection Container
  */
-export class Container<TRegistrations extends RegistrationsMap = RegistrationsMap> {
+export class Container<TRegistrations extends RegistrationsMap = Record<never, unknown>> {
     private registrations: Map<string, Registration<unknown>> = new Map()
 
     public constructor()

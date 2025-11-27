@@ -66,6 +66,40 @@ it('throws error if dep is not provided', () => {
     }).toThrowError('No registration')
 })
 
+it('factory has access to container', () => {
+    const container = new Container<{
+        test: TestService
+        test2: TestService
+    }>()
+
+    container.register('test', () => new TestService())
+    container.register('test2', (c) => c.get('test'))
+
+    const dep1 = container.get('test')
+    const dep2 = container.get('test2')
+
+    expect(dep1).toBe(dep2)
+})
+
+it('handles circular dependencies', () => {
+    const container = new Container<{
+        testA: TestService
+        testB: TestService
+    }>()
+
+    container.register('testA', (c) => {
+        return c.get('testB')
+    })
+
+    container.register('testB', (c) => {
+        return c.get('testA')
+    })
+
+    expect(() => {
+        container.get('testA')
+    }).toThrowError('Circular dependency detected: testA -> testB -> testA')
+})
+
 //
 
 interface ParentRegistrations {
@@ -127,7 +161,56 @@ it('resolves three levels of containers', () => {
     expect(dep3).toBe(value3)
 })
 
-
 class TestService {
     //
 }
+
+it('di', () => {
+    type Logger = { log: (...args: any[]) => void }
+
+    class SomeClass {
+        public constructor(
+            public logger: Logger,
+        ) {
+
+        }
+    }
+
+    const container = new Container<{
+        logger: Logger,
+        db: Logger,
+    }>()
+
+    container.register('logger', () => console)
+    container.register('db', (c) => {
+        return c.get('logger')
+    })
+
+    function resolveDependencies(obj: object, container: Container<any>, diMap: Map<any, string[]>): any[] | undefined {
+        const deps = diMap.get(obj as any)
+
+        if (!deps) {
+            return undefined
+        }
+
+        return deps.map((depName: string) => {
+            if (!container.has(depName)) {
+                throw new Error(`Unresolved dependency: ${depName}`)
+            }
+
+            return container.get(depName)
+        })
+    }
+
+    const diMap = new Map([
+        [SomeClass, ['logger']],
+    ])
+
+    const args = resolveDependencies(SomeClass, container, diMap) ?? []
+
+    const instance = Reflect.construct(SomeClass, args)
+
+    expect(instance).toBeInstanceOf(SomeClass)
+
+    expect(instance.logger).toBe(console)
+})
