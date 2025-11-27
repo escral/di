@@ -6,6 +6,10 @@
 pnpm add @escral/di
 ```
 
+## Container
+
+The `Container` class provides type-safe dependency injection container functionality.
+
 ### Basic Usage
 
 ```typescript
@@ -64,3 +68,34 @@ const requestContainer = new Container<RequestContainer>(appContainer)
 // Now can access parent container dependencies
 const db = requestContainer.get('db')
 ```
+
+
+## Utils
+
+### getBindingsProxy
+
+Creates a proxy object to access container bindings directly, without calling `get` method. Allows destructuring.
+
+```typescript
+import { Container, getBindingsProxy } from '@escral/di'
+
+//
+
+const container = new Container<{
+    logger: LoggerService
+}>()
+
+const bindings = getBindingsProxy(container)
+
+// Destructuring
+const { logger } = bindings
+
+// Accessing directly
+const logger2 = bindings.logger
+
+// Iterating over bindings
+for (const key in bindings) {
+    // 1. key === 'logger'
+}
+```
+

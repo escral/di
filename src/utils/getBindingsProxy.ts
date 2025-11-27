@@ -9,11 +9,6 @@ export function getBindingsProxy<T extends Container<any>>(
                 return Reflect.get(target, prop, receiver)
             }
 
-            // If it's a container method, return it
-            if (prop in target && typeof (target as any)[prop] === 'function') {
-                return Reflect.get(target, prop, receiver)
-            }
-
             // Otherwise, treat it as a registration key
             if (!target.has(prop)) {
                 throw new Error(`No registration for key "${prop}"`)
@@ -30,8 +25,19 @@ export function getBindingsProxy<T extends Container<any>>(
             return target.has(prop)
         },
 
-        ownKeys() {
-            return Array.from(container.getRegistrations().keys())
+        ownKeys(target) {
+            return Array.from(target.getRegistrations().keys())
+        },
+
+        getOwnPropertyDescriptor(target, prop) {
+            if (target.has(prop as string)) {
+                return {
+                    enumerable: true,
+                    configurable: true,
+                }
+            }
+
+            return undefined
         },
     }) as any
 }
