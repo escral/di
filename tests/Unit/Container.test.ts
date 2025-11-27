@@ -93,6 +93,32 @@ it('resolves from parent container', () => {
     expect(dep2).toBe(value2)
 })
 
+interface GrandParentRegistrations {
+    grandParentDep: TestService
+}
+
+it('resolves three levels of containers', () => {
+    const grandParentContainer = new Container<GrandParentRegistrations>()
+    const parentContainer = new Container<ParentRegistrations, GrandParentRegistrations>(grandParentContainer)
+    const container = new Container<ChildRegistrations, ParentRegistrations>(parentContainer)
+
+    const value1 = new TestService()
+    const value2 = new TestService()
+    const value3 = new TestService()
+
+    grandParentContainer.register('grandParentDep', () => value1)
+    parentContainer.register('parentDep', () => value2)
+    container.register('childDep', () => value3)
+
+    const dep1 = container.get('grandParentDep')
+    const dep2 = container.get('parentDep')
+    const dep3 = container.get('childDep')
+
+    expect(dep1).toBe(value1)
+    expect(dep2).toBe(value2)
+    expect(dep3).toBe(value3)
+})
+
 class TestService {
     //
 }
