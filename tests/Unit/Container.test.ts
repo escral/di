@@ -61,7 +61,6 @@ it('throws error if dep is not provided', () => {
     const container = new Container()
 
     expect(() => {
-        // @ts-expect-error
         container.get('test')
     }).toThrowError('No registration')
 })
@@ -72,13 +71,13 @@ interface ParentRegistrations {
     parentDep: TestService
 }
 
-interface ChildRegistrations {
+interface ChildRegistrations extends ParentRegistrations {
     childDep: TestService
 }
 
 it('resolves from parent container', () => {
     const parentContainer = new Container<ParentRegistrations>()
-    const container = new Container<ChildRegistrations, ParentRegistrations>(parentContainer)
+    const container = new Container<ChildRegistrations>(parentContainer)
 
     const value1 = new TestService()
     const value2 = new TestService()
@@ -97,10 +96,18 @@ interface GrandParentRegistrations {
     grandParentDep: TestService
 }
 
+interface ParentRegistrationsWithGrandParent extends GrandParentRegistrations {
+    parentDep: TestService
+}
+
+interface ChildRegistrationsWithGrandParent extends ParentRegistrationsWithGrandParent {
+    childDep: TestService
+}
+
 it('resolves three levels of containers', () => {
     const grandParentContainer = new Container<GrandParentRegistrations>()
-    const parentContainer = new Container<ParentRegistrations, GrandParentRegistrations>(grandParentContainer)
-    const container = new Container<ChildRegistrations, ParentRegistrations>(parentContainer)
+    const parentContainer = new Container<ParentRegistrationsWithGrandParent>(grandParentContainer)
+    const container = new Container<ChildRegistrationsWithGrandParent>(parentContainer)
 
     const value1 = new TestService()
     const value2 = new TestService()
@@ -117,6 +124,20 @@ it('resolves three levels of containers', () => {
     expect(dep1).toBe(value1)
     expect(dep2).toBe(value2)
     expect(dep3).toBe(value3)
+})
+
+it('prevents registering parent container keys', () => {
+    const parentContainer = new Container<ParentRegistrations>()
+    const container = new Container<ChildRegistrations>(parentContainer)
+
+    const value1 = new TestService()
+    const value2 = new TestService()
+
+    parentContainer.register('parentDep', () => value1)
+
+    expect(() => {
+        container.register('parentDep', () => value2)
+    }).toThrowError('Cannot register key "parentDep" because it already exists in the parent container')
 })
 
 class TestService {

@@ -54,14 +54,13 @@ interface AppContainer {
     db: DatabaseService
 }
 
-interface RequestContainer {
+interface RequestContainer extends AppContainer {
     auth: AuthService
 }
 
 const appContainer = new Container<AppContainer>()
-// Pass parent container interface as second generic parameter
-const requestContainer = new Container<RequestContainer, AppContainer>(appContainer)
+const requestContainer = new Container<RequestContainer>(appContainer)
 
-// Now can access parent container services
+// Now can access parent container dependencies
 const db = requestContainer.get('db')
 ```

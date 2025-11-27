@@ -1,27 +1,27 @@
-type Factory<T> = (container: Container<Registrations>) => T
-type Registration<T> = { factory: Factory<T>, instance?: T }
-type RegistrationKey<TRegistrations extends Registrations> = Extract<keyof TRegistrations, string>
-type Registrations = object
+export type Factory<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = (container: Container<TRegistrations>) => T
+export type Registration<T> = { factory: Factory<T>, instance?: T }
+export type RegistrationKey<TRegistrations extends RegistrationsMap> = Extract<keyof TRegistrations, string>
+export type RegistrationsMap = Record<string, unknown>
 
-export class Container<
-    TRegistrations extends Registrations,
-    TParentRegistrations extends Registrations = Record<never, unknown>,
-> {
+/**
+ * Dependency Injection Container
+ */
+export class Container<TRegistrations extends RegistrationsMap = RegistrationsMap> {
     private registrations: Map<string, Registration<unknown>> = new Map()
 
     public constructor()
-    public constructor(parent: Container<TParentRegistrations>)
+    public constructor(parent: Container<any>)
     public constructor(
-        private readonly parent?: Container<TParentRegistrations> | undefined,
+        private readonly parent?: Container<any> | undefined,
     ) {
         //
     }
 
     //
 
-    public get<TKey extends RegistrationKey<TRegistrations>>(key: TKey): TRegistrations[TKey]
-    public get<TKey extends RegistrationKey<TParentRegistrations>>(key: TKey): TParentRegistrations[TKey]
-    public get(key: string) {
+    public get<TKey extends RegistrationKey<TRegistrations>>(
+        key: TKey,
+    ): TRegistrations[TKey] {
         const registration = this.registrations.get(key)
 
         if (registration) {
@@ -29,18 +29,17 @@ export class Container<
                 registration.instance = registration.factory(this as any)
             }
 
-            return registration.instance
+            return registration.instance as TRegistrations[TKey]
         }
 
         if (this.parent) {
-            return this.parent.get(key as any)
+            return this.parent.get(key as any) as TRegistrations[TKey]
         }
 
         throw new Error(`No registration for key "${key}"`)
     }
 
     public has<TKey extends RegistrationKey<TRegistrations>>(key: TKey): boolean
-    public has<TKey extends RegistrationKey<TParentRegistrations>>(key: TKey): boolean
     public has<TKey extends string>(key: TKey): boolean {
         if (this.registrations.has(key)) {
             return true
@@ -68,7 +67,7 @@ export class Container<
 
     //
 
-    public getSelfRegistrationKeys(): RegistrationKey<TRegistrations>[] {
-        return Array.from(this.registrations.keys()) as RegistrationKey<TRegistrations>[]
+    public getRegistrations(): Map<RegistrationKey<TRegistrations>, Registration<unknown>> {
+        return this.registrations as any
     }
 }
