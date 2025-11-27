@@ -1,7 +1,7 @@
 export type Factory<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = (container: Container<TRegistrations>) => T
-export type Registration<T> = { factory: Factory<T>, instance?: T }
+export type Registration<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = { factory: Factory<T, TRegistrations>, instance?: T }
 export type RegistrationKey<TRegistrations extends RegistrationsMap> = Extract<keyof TRegistrations, string>
-export type RegistrationsMap = Record<string, unknown>
+export type RegistrationsMap = object
 
 /**
  * Dependency Injection Container
@@ -56,10 +56,10 @@ export class Container<TRegistrations extends RegistrationsMap = RegistrationsMa
 
     public register<TKey extends RegistrationKey<TRegistrations>>(
         key: TKey,
-        factory: Factory<TRegistrations[TKey]>,
+        factory: Factory<TRegistrations[TKey], TRegistrations>,
     ): this {
         this.registrations.set(key, {
-            factory,
+            factory: factory as any,
         })
 
         return this

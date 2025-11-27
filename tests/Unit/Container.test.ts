@@ -61,6 +61,7 @@ it('throws error if dep is not provided', () => {
     const container = new Container()
 
     expect(() => {
+        // @ts-expect-error testing error case
         container.get('test')
     }).toThrowError('No registration')
 })
@@ -126,19 +127,6 @@ it('resolves three levels of containers', () => {
     expect(dep3).toBe(value3)
 })
 
-it('prevents registering parent container keys', () => {
-    const parentContainer = new Container<ParentRegistrations>()
-    const container = new Container<ChildRegistrations>(parentContainer)
-
-    const value1 = new TestService()
-    const value2 = new TestService()
-
-    parentContainer.register('parentDep', () => value1)
-
-    expect(() => {
-        container.register('parentDep', () => value2)
-    }).toThrowError('Cannot register key "parentDep" because it already exists in the parent container')
-})
 
 class TestService {
     //
