@@ -1,8 +1,5 @@
-export type Factory<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = (container: Container<TRegistrations>) => T
-export type Registration<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = { factory: Factory<T, TRegistrations>, instance?: T }
-export type RegistrationKey<TRegistrations extends RegistrationsMap> = Extract<keyof TRegistrations, string>
-export type RegistrationsMap = object
-export type ExtractRegistrations<T> = T extends Container<infer R> ? R : never
+import { constructWithDependencies } from '~/utils/constructWithDependencies'
+import { isConstructor } from '~/helpers/isConstructor'
 
 /**
  * Dependency Injection Container
@@ -27,7 +24,7 @@ export class Container<TRegistrations extends RegistrationsMap = Record<never, u
 
         if (registration) {
             if (registration.instance === undefined) {
-                registration.instance = registration.factory(this as any)
+                registration.instance = this.instantiate(registration)
             }
 
             return registration.instance as TRegistrations[TKey]
@@ -38,6 +35,18 @@ export class Container<TRegistrations extends RegistrationsMap = Record<never, u
         }
 
         throw new Error(`No registration for key "${key}"`)
+    }
+
+    private instantiate(
+        registration: Registration<unknown>,
+    ): unknown {
+        const factory = registration.factory
+
+        if (isConstructor(factory)) {
+            return constructWithDependencies(factory, this)
+        }
+
+        return (factory as any)(this)
     }
 
     public has<TKey extends RegistrationKey<TRegistrations>>(key: TKey): boolean
@@ -72,3 +81,12 @@ export class Container<TRegistrations extends RegistrationsMap = Record<never, u
         return this.registrations as any
     }
 }
+
+export type Factory<T, TRegistrations extends RegistrationsMap = RegistrationsMap> =
+    | ((container: Container<TRegistrations>) => T)
+    | AnyConstructor
+export type Registration<T, TRegistrations extends RegistrationsMap = RegistrationsMap> = { factory: Factory<T, TRegistrations>, instance?: T }
+export type RegistrationKey<TRegistrations extends RegistrationsMap> = Extract<keyof TRegistrations, string>
+export type RegistrationsMap = object
+export type ExtractRegistrations<T> = T extends Container<infer R> ? R : never
+type AnyConstructor = new (...args: any[]) => any

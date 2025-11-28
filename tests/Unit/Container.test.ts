@@ -1,5 +1,7 @@
 import { expect, it } from 'vitest'
 import { Container } from '~/lib/Container'
+import { registerDIRelation } from '~/utils/registerDIRelation'
+import { constructWithDependencies } from '~/utils/constructWithDependencies'
 
 it('registers dep on call', async () => {
     const container = new Container<{
@@ -55,6 +57,18 @@ it('replaces dep on registration', () => {
 
     expect(dep1).toBeInstanceOf(TestService)
     expect(dep1).not.toBe(dep2)
+})
+
+it('provides dep via class constructor', () => {
+    const container = new Container<{
+        test: TestService
+    }>()
+
+    container.register('test', TestService)
+
+    const dep1 = container.get('test')
+
+    expect(dep1).toBeInstanceOf(TestService)
 })
 
 it('throws error if dep is not provided', () => {
@@ -172,45 +186,27 @@ it('di', () => {
         public constructor(
             public logger: Logger,
         ) {
-
+            //
         }
     }
 
     const container = new Container<{
         logger: Logger,
-        db: Logger,
+        someClass: SomeClass,
     }>()
 
     container.register('logger', () => console)
-    container.register('db', (c) => {
-        return c.get('logger')
-    })
 
-    function resolveDependencies(obj: object, container: Container<any>, diMap: Map<any, string[]>): any[] | undefined {
-        const deps = diMap.get(obj as any)
+    registerDIRelation(SomeClass, ['logger'])
 
-        if (!deps) {
-            return undefined
-        }
-
-        return deps.map((depName: string) => {
-            if (!container.has(depName)) {
-                throw new Error(`Unresolved dependency: ${depName}`)
-            }
-
-            return container.get(depName)
-        })
-    }
-
-    const diMap = new Map([
-        [SomeClass, ['logger']],
-    ])
-
-    const args = resolveDependencies(SomeClass, container, diMap) ?? []
-
-    const instance = Reflect.construct(SomeClass, args)
+    const instance = constructWithDependencies(SomeClass, container)
 
     expect(instance).toBeInstanceOf(SomeClass)
-
     expect(instance.logger).toBe(console)
+
+    container.register('someClass', SomeClass)
+
+    const someClass = container.get('someClass')
+
+    expect(someClass.logger).toBe(console)
 })
