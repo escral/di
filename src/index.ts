@@ -1,3 +1,8 @@
+// Core
 export * from '~/lib/Container'
-export * from '~/utils/getBindingsProxy'
 
+// Utility
+export * from '~/utils/getBindingsProxy'
+export * from '~/utils/constructWithDependencies'
+export * from '~/utils/registerDIRelation'
+export * from '~/utils/resolveDependencies'
