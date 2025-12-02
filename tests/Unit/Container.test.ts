@@ -18,7 +18,7 @@ it('registers dep on call', async () => {
     expect(dep).toBeInstanceOf(TestService)
 })
 
-it('does not register dep twice', async () => {
+it('does not resolve dep twice', async () => {
     const container = new Container<{
         test: TestService
     }>()
