@@ -24,7 +24,7 @@ const container = new Container<ServiceContainer>();
 
 container
     .register('logger', () => new LoggerService())
-    .register('userService', (c) => new UserService(c.logger))
+    .register('userService', (c) => new UserService(c.get('logger')))
 ```
 
 ### Extend container types from different places
